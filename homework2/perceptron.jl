@@ -1,6 +1,8 @@
 using Distributions
 using Plots
 
+# This struct object is all the parameters in the perceptron model, so we can
+# consider it to be the model
 mutable struct perceptron
     W::Any # 3-d weight vector
     δW::Any
@@ -15,7 +17,10 @@ mutable struct perceptron
     dim::Any
 end
 
-
+# This function makes it easier to create a perceptron struct. It is even
+# possible to create multi-layered perceptrons here. It takes a vector with the
+# dimensions, a activation function, the activation functions derivative and a
+# learning rate as input and outputs the desired struct.
 function init_perceptron(dimensions, activation_function, derivative, η)
     dim = length(dimensions)
 
@@ -45,6 +50,23 @@ function init_perceptron(dimensions, activation_function, derivative, η)
     return model
 end
 
+# This function trains the perceptron on the data in X_train for a certain
+# number of epochs and batch_size, after every epoch we evaluate our model on
+# the validation data and stop the training if the accuracy is less then 0.118
+function train(this, X_train, X_val, epochs, batch_size)
+    for it in 1:epochs
+        fit(this, X_train, batch_size)
+        train_score = score(this, X_train)
+        val_score = score(this, X_val)
+        println(it, "; C_train = ", train_score, ",C_val = ", val_score)
+        if val_score < 0.118
+            break
+        end
+    end
+end
+
+# This function takes a perceptron struct a matrix X and an integer batch_size
+# as input and fits the perceptron to the data in X.
 function fit(this, X, batch_size)
     ν_max = size(X)[1]
     for batch in 1:(ν_max/batch_size)
@@ -58,7 +80,8 @@ function fit(this, X, batch_size)
     end
 end
 
-
+# This functions performs a forward propegation for a given coordinate, updates
+# all the local fields and neurons
 function forward_propegate(this, X)
     this.V[1] = X#[1:this.dim]
     for (ind, w) in enumerate(this.W)
@@ -67,7 +90,8 @@ function forward_propegate(this, X)
     end
 end
 
-
+# This function performs a backwards propegation, i.e it computes all the δ for
+# all layers and updates the weight increments
 function back_propegate(this, t)
     this.δ[end] = (t .- this.V[end]) .* this.g_prime.(this.B[end])
     for ind in (this.dim-1):2
@@ -79,7 +103,8 @@ function back_propegate(this, t)
     end
 end
 
-
+# This function adds the weight increments to the parameter matrices and resets
+# the increment matrices afterwards
 function update_network(this)
     for ind in 1:this.dim-1
         this.W[ind] += this.δW[ind]
@@ -89,16 +114,20 @@ function update_network(this)
     this.δΘ -= this.δΘ
 end
 
+# Here we take a matrix as input and let the model predict on it. We later
+# return the predictions.
 function predict(this, X)
     output = []
     sz = size(X)[1]
     for ind in 1:sz
         forward_propegate(this, X[ind, 1:2])
-        push!(output, sign.(this.V[end][1]))
+        push!(output, sign.(this.V[end][1]))   # !push appends
     end
     return output
 end
 
+# This function we use to score our model, it returns the accuracy for the
+# predictions
 function score(this, X)
     output = predict(this, X)
     target = X[:,end]
@@ -108,16 +137,4 @@ function score(this, X)
         total += abs(o - t)
     end
     return total / (2 * p_val)
-end
-
-function train(this, X_train, X_val, epochs, batch_size)
-    for it in 1:epochs
-        fit(this, X_train, batch_size)
-        train_score = score(this, X_train)
-        val_score = score(this, X_val)
-        println(it, "; C_train = ", train_score, ",C_val = ", val_score)
-        if val_score < 0.118
-            break
-        end
-    end
 end
