@@ -23,7 +23,6 @@ end
 # learning rate as input and outputs the desired struct.
 function init_perceptron(dimensions, activation_function, derivative, η)
     dim = length(dimensions)
-
     W = [randn(dimensions[2], dimensions[1])] #./ dimensions[2]
     δW = [randn(dimensions[2], dimensions[1])] #./ dimensions[2]
     Θ = [zeros(dimensions[2])]
@@ -36,14 +35,12 @@ function init_perceptron(dimensions, activation_function, derivative, η)
         push!(δΘ, zeros(dimensions[ind+1]))
         push!(δ, zeros(dimensions[ind+1]))
     end
-
     V = [zeros(dimensions[1])]
     B = [zeros(dimensions[1])]
     for ind in 2:dim
         push!(V, zeros(dimensions[ind]))
         push!(B, zeros(dimensions[ind]))
     end
-
     g = activation_function
     g_prime = derivative
     model = perceptron(W, δW, V, B, Θ, δΘ, δ, η, g, g_prime, dim)

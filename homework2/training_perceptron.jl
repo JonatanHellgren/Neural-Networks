@@ -12,9 +12,7 @@ function main()
     g = tanh
     function g_prime(x) return 1 - tanh(x)^2 end
     pelle = init_perceptron([2, m1, 1], g, g_prime, 0.01)
-
     train(pelle, X_train, X_val, 1000, 10)
-
     scatter(X_val[:,1], X_val[:,2], color = heavy_side.(predict(pelle, X_val)))
     # writedlm("/home/jona/NN/homework2/w1.csv", pelle.W[1], ',')
     # writedlm("/home/jona/NN/homework2/w2.csv", pelle.W[2]', ',')
@@ -26,12 +24,9 @@ end
 function load_data()
     training_path = "/home/jona/NN/homework2/training_set.csv"
     X_train = read_csv(training_path)
-
     validation_path = "/home/jona/NN/homework2/validation_set.csv"
     X_val = read_csv(validation_path)
-
     normalize_data(X_train, X_val)
-
     return X_train, X_val
 end
 
