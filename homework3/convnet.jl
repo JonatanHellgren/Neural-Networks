@@ -83,6 +83,13 @@ function forward(l::DenseLayer, input::Vector{Float64})
   l.v = l.g.fun.(l.b)
 end
 
+function backward(layer::DenseLayer, activations::Vector{Float64},
+                  errorTerm::Float64, η::Float64) where L <: Layer
+  # do delta computation in same layer, maybe pass entire networw to the function,
+  # or maybe just l+1 
+  layer.δ = layer.w' * layer.δ .* prevLayer.g.prime.(prevLayer.b)
+end
+
 """
 Convolutional layer
 """
@@ -132,12 +139,6 @@ function forward(l::ConvLayer, input::Vector{Matrix{T}}) where T <: Number
   end
 end
 
-function backward(layer::DenseLayer, activations::Vector{Float64},
-                  errorTerm::Float64, η::Float64) where L <: Layer
-  # do delta computation in same layer, maybe pass entire networw to the function,
-  # or maybe just l+1 
-  layer.δ = layer.w' * layer.δ .* prevLayer.g.prime.(prevLayer.b)
-end
 
 """
 Input layer
