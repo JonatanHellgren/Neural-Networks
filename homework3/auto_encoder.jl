@@ -1,6 +1,7 @@
 using BSON: @save, @load
 using Flux, CUDA
 using Flux: onehotbatch, onecold 
+using Plots
 using MLDatasets
 using NPZ
 
@@ -91,6 +92,21 @@ function fit_model(model, epochs)
   end
 
   return model
+end
+
+function plot_numbers()
+  #heatmap(rehape(test, 28,28)[:,end:-1:1])
+  #0 -> 5
+  #1 -> 3
+  #2 -> 30
+  #3 -> 24
+  #4 -> 1
+  #5 -> 31
+  #6 -> 23
+  #7 -> 66
+  #8 -> 10
+  #9 -> 2
+  #
 end
 
 
