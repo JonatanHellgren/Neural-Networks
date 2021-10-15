@@ -1,11 +1,27 @@
+using DelimitedFiles
 using Flux, CUDA
 using Flux.Data: DataLoader
 using Flux: onehotbatch, onecold, crossentropy
 using Flux: @epochs
 using Statistics
 using MLDatasets
+using NPZ
 
-function load_data()
+function load_test_data(;dim=2)
+  x_test = Float32.(npzread("xTest2.npy"))./255
+
+  for μ in 1:size(x_test, 4)
+    x_test[:, :, 1, μ] = x_test[:, :, 1, μ]'
+  end
+
+  if dim == 1
+    x_test = reshape(x_test, 28*28, 1, 10000)
+  end
+
+  return x_test
+end
+
+function load_data(;dim=2)
   x_train, y_train = MLDatasets.MNIST.traindata()
   x_valid, y_valid = MLDatasets.MNIST.testdata()
 
@@ -14,6 +30,11 @@ function load_data()
 
   y_train = onehotbatch(y_train, 0:9)
   y_valid = onehotbatch(y_valid, 0:9)
+
+  if dim == 1
+    x_train = reshape(x_train, 28*28, 1, 60000)
+    x_valid = reshape(x_valid, 28*28, 1, 10000)
+  end
 
   return x_train, y_train, x_valid, y_valid
 end
@@ -53,6 +74,12 @@ function main(epochs)
     println("Epoch $it: train accuracy: $acc_train, train loss: $loss_train
             \t valid accuracy: $acc_valid, valid loss: $loss_valid\n")
   end
+
+
+  x_test = load_test_data()
+  ŷ = onecold(model(x_test), 0:9) |> cpu
+  println(ŷ[1:10])
+  writedlm("/home/jona/NN/homework3/classifications.csv", ŷ, ',')
 end
 
 function get_model()
@@ -81,7 +108,7 @@ end
 """
 
 @time begin
-  main(1e2)
+  #main(1e1)
 end
 
 
