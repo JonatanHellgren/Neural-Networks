@@ -7,6 +7,10 @@ using Statistics
 using MLDatasets
 using NPZ
 
+
+"""
+Function used to load the numpy data for testing
+"""
 function load_test_data(;dim=2)
   x_test = Float32.(npzread("xTest2.npy"))./255
 
@@ -21,6 +25,10 @@ function load_test_data(;dim=2)
   return x_test
 end
 
+"""
+Loads the mnist data, either 2d or 1d. It also transforms the data into float32
+since that is what makes my gpu go wosh.
+"""
 function load_data(;dim=2)
   x_train, y_train = MLDatasets.MNIST.traindata()
   x_valid, y_valid = MLDatasets.MNIST.testdata()
@@ -39,6 +47,11 @@ function load_data(;dim=2)
   return x_train, y_train, x_valid, y_valid
 end
 
+"""
+Function to train the network, it was possible to use Flux.train! here, but it 
+didn't work for me somehow, so I found this online and modified it a bit to make it 
+accept my data_loader.
+"""
 function train_model(loss, parameters, data_loader, optimizer)
   for batch in data_loader
     gradient = Flux.gradient(parameters) do
@@ -49,6 +62,33 @@ function train_model(loss, parameters, data_loader, optimizer)
   end
 end
 
+"""
+Loads our model
+We have two convolutional 3x3 layers, each followed by a maxpooling layer.
+This is followed by a flatten layer that provides the input for the final dense
+layer with softmax output. 
+"""
+function get_model()
+  model = Chain(
+    # 28x28 => 28x28x8
+    Conv((3,3), 1=>8, pad=1, stride=1, relu),
+    # => 14x14x8
+    x -> maxpool(x, (2,2)),
+    # => 14x14x16
+    Conv((3,3), 8=>16, pad=1, stride=1, relu),
+    # => 7x7x16
+    x -> maxpool(x, (2,2)),
+    # => 784
+    x -> reshape(x, :, size(x,4)),
+    Dense(784, 10),
+    softmax
+  )
+end
+
+"""
+This function executes all the necessary thing we need to do to answer this question.
+We simply just need to select for how many epochs we want to train the model.
+"""
 function main(epochs)
   x_train, y_train, x_valid, y_valid = load_data() |> gpu
   data_loader = DataLoader((data=x_train, label=y_train), batchsize=128) |> gpu
@@ -82,34 +122,8 @@ function main(epochs)
   writedlm("/home/jona/NN/homework3/classifications.csv", ŷ, ',')
 end
 
-function get_model()
-  model = Chain(
-    # 28x28 => 28x28x8
-    Conv((3,3), 1=>8, pad=1, stride=1, relu),
-    # => 14x14x8
-    x -> maxpool(x, (2,2)),
-    # => 14x14x16
-    Conv((3,3), 8=>16, pad=1, stride=1, relu),
-    # => 7x7x16
-    x -> maxpool(x, (2,2)),
-    # => 784
-    x -> reshape(x, :, size(x,4)),
-    Dense(784, 10),
-    softmax
-  )
-end
 
-"""
-  Dense(784, 64, relu),
-  Dense(64, 64, relu),
-  Dense(64, 64, relu),
-  Dense(64, 10),
-  softmax
-"""
-
-@time begin
-  #main(1e1)
-end
+main(1e1)
 
 
 
