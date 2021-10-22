@@ -90,7 +90,7 @@ function fit_auto_encoder(decoder, encoder, epochs)
 
   optimizer = ADAM(0.001)
   loss(x, y) = Flux.mse(decoder(encoder(x)), y)
-  parameters = params(encoder, decoder)
+  parameters = Flux.params(encoder, decoder)
 
   println("training")
   for it = 1:epochs
@@ -238,10 +238,11 @@ end
 """
 Helper function to draw the artifical numbers
 """
-function draw_artificial_number(encoder, decoder, x, y, n)
+function draw_artifical_number(encoder, decoder, x, y, n)
   labels = onecold(y, 0:9) |> cpu
   latent_dim = encoder(x) |> cpu
   mean_latent_digit = [mean(latent_dim[i, 1, labels .== n]) for i = 1:4] |> gpu
+  println(mean_latent_digit)
   decoded_mean_latent_digit = decoder(mean_latent_digit) |> cpu
   ready_to_plot = 1 .- reshape(decoded_mean_latent_digit, 28,28)[:,end:-1:1]'
   heatmap(ready_to_plot, c = :grays, legend = :none)
